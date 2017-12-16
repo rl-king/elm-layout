@@ -33,9 +33,21 @@ grid columnCount gutter elements =
         columnAsFloat =
             toFloat columnCount
 
-        columnStyle =
+        getMargin index =
+            if index + 1 == columnCount then
+                0
+            else
+                gutter
+
+        columnStyle margin =
             style
-                [ ( "width"
+                [ ( "list-style", "none" )
+                , ( "margin-top", "0" )
+                , ( "margin-bottom", "0" )
+                , ( "padding", "0" )
+                , ( "float", "left" )
+                , ( "margin-right", toString margin ++ "px" )
+                , ( "width"
                   , "calc("
                         ++ toString (100 / columnAsFloat)
                         ++ "% - "
@@ -45,14 +57,21 @@ grid columnCount gutter elements =
                 ]
     in
     div
-        [ class "elm-masonry-container"
-        , style [ ( "display", "flex" ), ( "justify-content", "space-between" ) ]
-        ]
-        (List.map (div [ class "elm-masonry-column", columnStyle ] << List.map (gridItem gutter)) colums)
+        [ class "elm-masonry-container" ]
+        (List.indexedMap
+            (\index column ->
+                ul
+                    [ class "elm-masonry-column"
+                    , columnStyle (getMargin index)
+                    ]
+                    (List.map (gridItem gutter) column)
+            )
+            colums
+        )
 
 
 gridItem : Gutter -> Html msg -> Html msg
 gridItem gutter element =
-    div
+    li
         [ class "elm-masonry-item", style [ ( "margin-bottom", toString gutter ++ "px" ) ] ]
         [ element ]
