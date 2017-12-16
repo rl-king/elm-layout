@@ -1,7 +1,7 @@
 {
     "version": "1.0.0",
-    "summary": "Elm Masonry Example",
-    "repository": "https://github.com/rl-king/elm-masonry.git",
+    "summary": "Elm Layout Example",
+    "repository": "https://github.com/rl-king/elm-layout.git",
     "license": "BSD3",
     "source-directories": [
         ".", "../src", "../"

@@ -2,7 +2,7 @@ module Example exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Masonry
+import Layout
 
 
 -- Create a four row grid of Html elements with a gutter of 12px
@@ -10,17 +10,21 @@ import Masonry
 
 main : Html msg
 main =
-    div [ style [ ( "padding", "12px" ) ] ] [ Masonry.grid 4 12 htmlElements ]
+    div [ style [ ( "padding", "12px" ) ] ]
+        [ Layout.column 3 12 htmlElements
+        , Layout.row 3 12 htmlElements
+        ]
 
 
 htmlElements : List (Html msg)
 htmlElements =
-    List.map element data
+    List.indexedMap element data
 
 
-element : ( String, String ) -> Html msg
-element ( color, height ) =
-    div [ style [ ( "height", height ), ( "background-color", color ) ] ] []
+element : Int -> ( String, String ) -> Html msg
+element index ( color, height ) =
+    div []
+        [ div [ style [ ( "height", height ), ( "background-color", color ) ] ] [ text (toString index) ] ]
 
 
 data : List ( String, String )
@@ -29,21 +33,12 @@ data =
     , ( "#666", "150px" )
     , ( "#666", "150px" )
     , ( "#999", "200px" )
-    , ( "#333", "100px" )
-    , ( "#333", "100px" )
+    , ( "#666", "150px" )
+    , ( "#999", "300px" )
+    , ( "#666", "150px" )
     , ( "#666", "150px" )
     , ( "#999", "200px" )
-    , ( "#333", "100px" )
-    , ( "#999", "200px" )
-    , ( "#999", "200px" )
-    , ( "#333", "100px" )
-    , ( "#999", "200px" )
-    , ( "#666", "150px" )
-    , ( "#333", "100px" )
-    , ( "#666", "150px" )
-    , ( "#999", "200px" )
-    , ( "#333", "100px" )
-    , ( "#333", "100px" )
+    , ( "#999", "300px" )
     , ( "#666", "150px" )
     , ( "#999", "200px" )
     ]

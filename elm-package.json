@@ -1,13 +1,13 @@
 {
     "version": "1.0.0",
-    "summary": "Create masonry grid layout",
-    "repository": "https://github.com/rl-king/elm-masonry.git",
+    "summary": "Easy for layout",
+    "repository": "https://github.com/rl-king/elm-layout.git",
     "license": "BSD3",
     "source-directories": [
         "src"
     ],
     "exposed-modules": [
-        "Masonry"
+        "Layout"
     ],
     "dependencies": {
         "elm-community/list-extra": "7.0.0 <= v < 8.0.0",
