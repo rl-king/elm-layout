@@ -1,7 +1,9 @@
-module Masonry exposing (grid)
+module Masonry exposing (Column, Gutter, grid)
 
 {-|
 
+@docs Column
+@docs Gutter
 @docs grid
 
 -}
@@ -11,31 +13,33 @@ import Html.Attributes exposing (..)
 import List.Extra exposing (greedyGroupsOf, transpose)
 
 
-type alias Rows =
+{-| -}
+type alias Column =
     Int
 
 
+{-| -}
 type alias Gutter =
     Float
 
 
 {-| -}
-grid : Rows -> Gutter -> List (Html msg) -> Html msg
-grid rowCount gutter elements =
+grid : Column -> Gutter -> List (Html msg) -> Html msg
+grid columnCount gutter elements =
     let
-        rows =
-            transpose (greedyGroupsOf rowCount elements)
+        colums =
+            transpose (greedyGroupsOf columnCount elements)
 
-        rowAsFloat =
-            toFloat rowCount
+        columnAsFloat =
+            toFloat columnCount
 
-        rowStyle =
+        columnStyle =
             style
                 [ ( "width"
                   , "calc("
-                        ++ toString (100 / rowAsFloat)
+                        ++ toString (100 / columnAsFloat)
                         ++ "% - "
-                        ++ toString (gutter * (rowAsFloat - 1) / rowAsFloat)
+                        ++ toString (gutter * (columnAsFloat - 1) / columnAsFloat)
                         ++ "px"
                   )
                 ]
@@ -44,7 +48,7 @@ grid rowCount gutter elements =
         [ class "elm-masonry-container"
         , style [ ( "display", "flex" ), ( "justify-content", "space-between" ) ]
         ]
-        (List.map (div [ class "elm-masonry-row", rowStyle ] << List.map (gridItem gutter)) rows)
+        (List.map (div [ class "elm-masonry-column", columnStyle ] << List.map (gridItem gutter)) colums)
 
 
 gridItem : Gutter -> Html msg -> Html msg

@@ -2,7 +2,7 @@ module Example exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Masonry exposing (..)
+import Masonry
 
 
 -- Create a four row grid of Html elements with a gutter of 12px
