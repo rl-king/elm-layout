@@ -41,9 +41,11 @@ update (OnWindowSize { width }) model =
 
 view : Int -> Html Msg
 view windowWidth =
-    div [ style [ ( "padding", "12px" ) ] ]
-        [ Layout.column (Layout.responsive windowWidth) 12 htmlElements
-        , Layout.row 3 12 htmlElements
+    div [ style [ ( "padding", "48px" ) ] ]
+        [ Layout.group 48
+            [ Layout.column (Layout.responsive windowWidth) 12 htmlElements
+            , Layout.row 3 12 htmlElements
+            ]
         ]
 
 
@@ -60,15 +62,17 @@ element index ( color, height ) =
 
 data : List ( String, String )
 data =
-    [ ( "#333", "100px" )
-    , ( "#666", "150px" )
-    , ( "#666", "150px" )
-    , ( "#999", "200px" )
-    , ( "#666", "150px" )
-    , ( "#999", "300px" )
-    , ( "#666", "150px" )
-    , ( "#666", "150px" )
-    , ( "#999", "200px" )
-    , ( "#999", "300px" )
-    , ( "#999", "200px" )
+    [ ( "SlateBlue", "100px" )
+    , ( "Tomato", "150px" )
+    , ( "Tomato", "150px" )
+    , ( "MediumSeaGreen", "200px" )
+    , ( "Tomato", "150px" )
+    , ( "Violet", "300px" )
+    , ( "SlateBlue", "100px" )
+    , ( "Tomato", "150px" )
+    , ( "MediumSeaGreen", "200px" )
+    , ( "SlateBlue", "100px" )
+    , ( "Tomato", "150px" )
+    , ( "Violet", "300px" )
+    , ( "MediumSeaGreen", "200px" )
     ]

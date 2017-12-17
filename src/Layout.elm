@@ -1,4 +1,4 @@
-module Layout exposing (Columns, Gutter, column, responsive, row)
+module Layout exposing (Columns, Gutter, column, group, responsive, responsiveCustom, row)
 
 {-|
 
@@ -6,7 +6,9 @@ module Layout exposing (Columns, Gutter, column, responsive, row)
 @docs Gutter
 @docs column
 @docs row
+@docs group
 @docs responsive
+@docs responsiveCustom
 
 -}
 
@@ -81,7 +83,7 @@ columnItem gutter element =
 row : Columns -> Gutter -> List (Html msg) -> Html msg
 row columns gutter elements =
     let
-        colums =
+        groupedElements =
             greedyGroupsOf columns elements
 
         columnsAsFloat =
@@ -103,7 +105,7 @@ row columns gutter elements =
                 , ( "clear", "both" )
                 ]
     in
-    div [] (List.map (ul [ columnStyle ] << List.indexedMap (rowItem columnsAsFloat gutter << getMargin)) colums)
+    div [] (List.map (ul [ columnStyle ] << List.indexedMap (rowItem columnsAsFloat gutter << getMargin)) groupedElements)
 
 
 rowItem : Float -> Gutter -> Float -> Html msg -> Html msg
@@ -126,17 +128,71 @@ rowItem columnsAsFloat gutter margin element =
 
 
 {-| -}
+group : Gutter -> List (Html msg) -> Html msg
+group gutter layouts =
+    let
+        columns =
+            List.length layouts
+
+        columnsAsFloat =
+            toFloat columns
+
+        getMargin index =
+            if index + 1 == columns then
+                0
+            else
+                gutter
+    in
+    div
+        [ style [ ( "width", "100%" ) ] ]
+        (List.indexedMap (groupItem columnsAsFloat gutter << getMargin) layouts)
+
+
+groupItem : Float -> Gutter -> Float -> Html msg -> Html msg
+groupItem columns gutter margin element =
+    div
+        [ style
+            [ ( "margin-bottom", toString gutter ++ "px" )
+            , ( "margin-right", toString margin ++ "px" )
+            , ( "width"
+              , "calc("
+                    ++ toString (100 / columns)
+                    ++ "% - "
+                    ++ toString (gutter * (columns - 1) / columns)
+                    ++ "px"
+              )
+            , ( "float", "left" )
+            ]
+        ]
+        [ element ]
+
+
+{-| -}
 responsive : Int -> Int
 responsive windowWidth =
-    if windowWidth < 480 then
-        1
-    else if windowWidth < 768 then
-        2
-    else if windowWidth < 1024 then
-        3
-    else if windowWidth < 1280 then
-        4
-    else if windowWidth < 1660 then
-        5
+    List.foldl (responsiveHelper windowWidth) 1 defaultBreakpoints
+
+
+{-| -}
+responsiveCustom : Int -> List ( Int, Int ) -> Int
+responsiveCustom windowWidth breakpoints =
+    List.foldl (responsiveHelper windowWidth) 1 breakpoints
+
+
+responsiveHelper : Int -> ( Int, Int ) -> Int -> Int
+responsiveHelper windowWidth ( columns, breakpoint ) acc =
+    if breakpoint <= windowWidth then
+        columns
     else
-        6
+        acc
+
+
+defaultBreakpoints : List ( Int, Int )
+defaultBreakpoints =
+    [ ( 1, 480 )
+    , ( 2, 768 )
+    , ( 3, 1024 )
+    , ( 4, 1280 )
+    , ( 5, 1660 )
+    , ( 6, 1920 )
+    ]
