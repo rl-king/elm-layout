@@ -1,4 +1,4 @@
-module Layout exposing (Columns, Gutter, column, row)
+module Layout exposing (Columns, Gutter, column, responsive, row)
 
 {-|
 
@@ -6,6 +6,7 @@ module Layout exposing (Columns, Gutter, column, row)
 @docs Gutter
 @docs column
 @docs row
+@docs responsive
 
 -}
 
@@ -122,3 +123,20 @@ rowItem columnsAsFloat gutter margin element =
             ]
         ]
         [ element ]
+
+
+{-| -}
+responsive : Int -> Int
+responsive windowWidth =
+    if windowWidth < 480 then
+        1
+    else if windowWidth < 768 then
+        2
+    else if windowWidth < 1024 then
+        3
+    else if windowWidth < 1280 then
+        4
+    else if windowWidth < 1660 then
+        5
+    else
+        6
