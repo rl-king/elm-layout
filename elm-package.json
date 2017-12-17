@@ -1,6 +1,6 @@
 {
     "version": "1.0.0",
-    "summary": "Easy for layout",
+    "summary": "Tools to create simple grid and masonry-like layouts",
     "repository": "https://github.com/rl-king/elm-layout.git",
     "license": "BSD3",
     "source-directories": [

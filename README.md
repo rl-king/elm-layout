@@ -1,7 +1,7 @@
 #  Elm Layout
 A package that makes it super easy to create grids.
 
-<img style="max-width=100%;" src="./preview.png">
+<img style="width:100%;" src="./preview.png">
 
 ## Usage
 For now there are just two styles: `column` and `row`. Both have this signature.
