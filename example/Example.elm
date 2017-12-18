@@ -39,10 +39,10 @@ update (OnWindowSize { width }) model =
 view : Int -> Html Msg
 view windowWidth =
     main_ [ style [ ( "margin", "0 auto" ), ( "max-width", "1280px" ), ( "padding", "24px" ) ] ]
-        [ div [] (Layout.columnVariable [ 1, 2, 3, 6 ] 12 htmlElements)
+        [ div [] (Layout.columnVariable [ 2, 2 ] 12 htmlElements)
         , viewRelated windowWidth
         , div []
-            (Layout.groupVariable [ 2, 1, 3 ]
+            (Layout.groupVariable (Layout.golden 3)
                 12
                 0
                 [ viewArticle
@@ -78,24 +78,24 @@ htmlElements =
 element : Int -> ( String, String ) -> Html Msg
 element index ( color, height ) =
     div []
-        [ div [ style [ ( "height", height ), ( "background-color", color ) ] ] [ text (toString index) ] ]
+        [ div [ style [ ( "padding-bottom", height ), ( "background-color", color ) ] ] [ text (toString index) ] ]
 
 
 data : List ( String, String )
 data =
-    [ ( "SlateBlue", "100px" )
-    , ( "Tomato", "150px" )
-    , ( "Tomato", "150px" )
-    , ( "MediumSeaGreen", "200px" )
-    , ( "Tomato", "150px" )
-    , ( "Violet", "300px" )
-    , ( "SlateBlue", "100px" )
-    , ( "Tomato", "150px" )
-    , ( "MediumSeaGreen", "200px" )
-    , ( "SlateBlue", "100px" )
-    , ( "Tomato", "150px" )
-    , ( "Violet", "300px" )
-    , ( "MediumSeaGreen", "200px" )
+    [ ( "SlateBlue", "100%" )
+    , ( "Tomato", "75%" )
+    , ( "Tomato", "100%" )
+    , ( "MediumSeaGreen", "100%" )
+    , ( "Tomato", "75%" )
+    , ( "Violet", "100%" )
+    , ( "SlateBlue", "75%" )
+    , ( "Tomato", "100%" )
+    , ( "MediumSeaGreen", "100%" )
+    , ( "SlateBlue", "75%" )
+    , ( "Tomato", "100%" )
+    , ( "Violet", "100%" )
+    , ( "MediumSeaGreen", "75%" )
     ]
 
 

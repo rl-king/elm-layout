@@ -2,6 +2,8 @@ module Layout
     exposing
         ( column
         , columnVariable
+        , golden
+        , goldenInversed
         , group
         , groupVariable
         , responsive
@@ -16,6 +18,9 @@ module Layout
 @docs column
 @docs columnVariable
 @docs row
+@docs golden
+@docs goldenInversed
+
 @docs group
 @docs responsive
 @docs responsiveCustom
@@ -27,10 +32,18 @@ module Layout
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import List.Extra exposing (greedyGroupsOf, transpose)
+import List.Extra exposing (cycle, greedyGroupsOf, groupsOfVarying, transpose)
+
+
+type alias Index =
+    Int
 
 
 type alias Columns =
+    Int
+
+
+type alias Fraction =
     Int
 
 
@@ -61,33 +74,40 @@ column columns gutter elements =
 
 
 {-| -}
-columnVariable : List Columns -> Gutter -> List (Html msg) -> List (Html msg)
-columnVariable columns gutter elements =
-    columnInternal columns (GutterInternal gutter gutter) elements
+columnVariable : List Fraction -> Gutter -> List (Html msg) -> List (Html msg)
+columnVariable fractions gutter elements =
+    columnInternal fractions (GutterInternal gutter gutter) elements
 
 
-columnInternal : List Columns -> GutterInternal -> List (Html msg) -> List (Html msg)
-columnInternal columns gutter elements =
+columnInternal : List Fraction -> GutterInternal -> List (Html msg) -> List (Html msg)
+columnInternal fractions gutter elements =
     let
         columnsEqualLength =
-            columns
-                |> List.repeat (List.length elements // List.length columns)
+            fractions
+                |> List.repeat (List.length elements // List.length fractions)
                 |> List.concat
 
         columnsWithSize =
-            List.map2 (,) columnsEqualLength (toColumns (List.length columns) elements)
+            List.map2 (,) columnsEqualLength (toColumns fractions elements)
     in
-    List.indexedMap (columnInternalList columns gutter) columnsWithSize
+    List.indexedMap (columnInternalList fractions gutter) columnsWithSize
 
 
-columnInternalList : List Columns -> GutterInternal -> Int -> ( Int, List (Html msg) ) -> Html msg
-columnInternalList columns ((GutterInternal right _) as gutter) index ( partCount, elements ) =
+columnInternalList : List Fraction -> GutterInternal -> Index -> ( Fraction, List (Html msg) ) -> Html msg
+columnInternalList fractions ((GutterInternal gutterRight _) as gutter) index ( fraction, elements ) =
     let
-        part =
-            100 / toFloat (List.sum columns)
+        width =
+            (100 / toFloat (List.sum fractions))
+                |> (*) (toFloat fraction)
+                |> toString
 
-        columnAsFloat =
-            toFloat (List.length columns)
+        marginAdjusted =
+            toFloat (List.length fractions)
+                |> (\length -> gutterRight * (length - 1) / length)
+                |> toString
+
+        marginRight =
+            toString (allButLast gutterRight (List.length fractions) index)
 
         columnStyle =
             style
@@ -96,22 +116,16 @@ columnInternalList columns ((GutterInternal right _) as gutter) index ( partCoun
                 , ( "margin-bottom", "0" )
                 , ( "padding", "0" )
                 , ( "float", "left" )
-                , ( "margin-right", toString (allButLast right (List.length columns) index) ++ "px" )
-                , ( "width"
-                  , "calc("
-                        ++ toString (part * toFloat partCount)
-                        ++ "% - "
-                        ++ toString (right * (columnAsFloat - 1) / columnAsFloat)
-                        ++ "px"
-                  )
+                , ( "margin-right", marginRight ++ "px" )
+                , ( "width", "calc(" ++ width ++ "% - " ++ marginAdjusted ++ "px" )
                 ]
     in
     ul [ columnStyle ] (List.map (columnInternalItem gutter) elements)
 
 
 columnInternalItem : GutterInternal -> Html msg -> Html msg
-columnInternalItem (GutterInternal _ bottom) element =
-    li [ style [ ( "margin-bottom", toString bottom ++ "px" ) ] ] [ element ]
+columnInternalItem (GutterInternal _ gutterBottom) element =
+    li [ style [ ( "margin-bottom", toString gutterBottom ++ "px" ) ] ] [ element ]
 
 
 
@@ -125,27 +139,23 @@ row columns gutter elements =
 
 
 {-| -}
-rowVariable : List Columns -> GutterRight -> GutterBottom -> List (Html msg) -> List (Html msg)
-rowVariable columns gutterRight gutterBottom elements =
-    rowInternal columns (GutterInternal gutterRight gutterBottom) elements
+rowVariable : List Fraction -> GutterRight -> GutterBottom -> List (Html msg) -> List (Html msg)
+rowVariable fractions gutterRight gutterBottom elements =
+    rowInternal fractions (GutterInternal gutterRight gutterBottom) elements
 
 
-rowInternal : List Columns -> GutterInternal -> List (Html msg) -> List (Html msg)
-rowInternal columns gutter elements =
+rowInternal : List Fraction -> GutterInternal -> List (Html msg) -> List (Html msg)
+rowInternal fractions gutter elements =
     let
-        columnsEqualLength =
-            columns
-                |> List.repeat (List.length elements // List.length columns)
-                |> List.concat
-
-        elementsWithSize =
-            List.map2 (,) columnsEqualLength elements
+        elementsWithFraction =
+            cycle (List.length elements) fractions
+                |> List.map2 (,) elements
     in
-    List.map (rowInternalList columns gutter) (toRows (List.length columns) elementsWithSize)
+    List.map (rowInternalList fractions gutter) (toRows (List.length fractions) elementsWithFraction)
 
 
-rowInternalList : List Columns -> GutterInternal -> List ( Columns, Html msg ) -> Html msg
-rowInternalList columns gutter elements =
+rowInternalList : List Fraction -> GutterInternal -> List ( Html msg, Fraction ) -> Html msg
+rowInternalList fractions gutter elements =
     let
         columnStyle =
             style
@@ -158,29 +168,30 @@ rowInternalList columns gutter elements =
                 , ( "display", "block" )
                 ]
     in
-    ul [ columnStyle ] (List.indexedMap (rowInternalItem columns gutter) elements)
+    ul [ columnStyle ] (List.indexedMap (rowInternalItem fractions gutter) elements)
 
 
-rowInternalItem : List Columns -> GutterInternal -> Int -> ( Columns, Html msg ) -> Html msg
-rowInternalItem columns (GutterInternal right bottom) index ( partCount, element ) =
+rowInternalItem : List Fraction -> GutterInternal -> Index -> ( Html msg, Fraction ) -> Html msg
+rowInternalItem fractions (GutterInternal gutterRight gutterBottom) index ( element, fraction ) =
     let
-        part =
-            100 / toFloat (List.sum columns)
+        width =
+            (100 / toFloat (List.sum fractions))
+                |> (*) (toFloat fraction)
+                |> toString
 
-        columnsLength =
-            toFloat (List.length columns)
+        marginAdjusted =
+            toFloat (List.length fractions)
+                |> (\length -> gutterRight * (length - 1) / length)
+                |> toString
+
+        marginRight =
+            toString (allButLast gutterRight (List.length fractions) index)
 
         itemStyle =
             style
-                [ ( "margin-bottom", toString bottom ++ "px" )
-                , ( "margin-right", toString (allButLast right (List.length columns) index) ++ "px" )
-                , ( "width"
-                  , "calc("
-                        ++ toString (part * toFloat partCount)
-                        ++ "% - "
-                        ++ toString (right * (columnsLength - 1) / columnsLength)
-                        ++ "px"
-                  )
+                [ ( "margin-bottom", toString gutterBottom ++ "px" )
+                , ( "margin-right", marginRight ++ "px" )
+                , ( "width", "calc(" ++ width ++ "% - " ++ marginAdjusted ++ "px" )
                 , ( "float", "left" )
                 ]
     in
@@ -198,14 +209,46 @@ group gutterRight gutterBottom layouts =
 
 
 {-| -}
-groupVariable : List Int -> GutterRight -> GutterBottom -> List (Html msg) -> List (Html msg)
-groupVariable columns gutterRight gutterBottom layouts =
-    groupCustomInternal (List.take (List.length layouts) columns) (GutterInternal gutterRight gutterBottom) layouts
+groupVariable : List Fraction -> GutterRight -> GutterBottom -> List (Html msg) -> List (Html msg)
+groupVariable fractions gutterRight gutterBottom layouts =
+    groupCustomInternal (List.take (List.length layouts) fractions) (GutterInternal gutterRight gutterBottom) layouts
 
 
-groupCustomInternal : List Int -> GutterInternal -> List (Html msg) -> List (Html msg)
-groupCustomInternal columns gutter layouts =
-    rowInternal columns gutter layouts
+groupCustomInternal : List Fraction -> GutterInternal -> List (Html msg) -> List (Html msg)
+groupCustomInternal fractions gutter layouts =
+    rowInternal fractions gutter layouts
+
+
+
+-- SIZING
+
+
+{-| -}
+majorFifth : Columns -> List Fraction
+majorFifth columns =
+    List.foldl (sizeHelper 1.5) [] (List.repeat columns 100)
+
+
+{-| -}
+golden : Columns -> List Fraction
+golden columns =
+    List.foldl (sizeHelper 1.618) [] (List.repeat columns 100)
+
+
+{-| -}
+goldenInversed : Columns -> List Fraction
+goldenInversed columns =
+    List.reverse (golden columns)
+
+
+sizeHelper : Float -> Columns -> List Fraction -> List Fraction
+sizeHelper mulitplier frac acc =
+    case acc of
+        [] ->
+            [ frac ]
+
+        x :: _ ->
+            floor (mulitplier * toFloat x) :: acc
 
 
 
@@ -261,9 +304,9 @@ defaultBreakpoints =
 -- HELPERS
 
 
-toColumns : Columns -> List (Html msg) -> List (List (Html msg))
-toColumns columns elements =
-    transpose (greedyGroupsOf columns elements)
+toColumns : List Fraction -> List (Html msg) -> List (List (Html msg))
+toColumns fractions elements =
+    transpose (greedyGroupsOf (List.length fractions) elements)
 
 
 toRows : Int -> List a -> List (List a)
@@ -271,7 +314,7 @@ toRows columns elements =
     greedyGroupsOf columns elements
 
 
-allButLast : GutterRight -> Columns -> Int -> GutterRight
+allButLast : GutterRight -> Columns -> Index -> GutterRight
 allButLast gutterRight columns index =
     if columns == index + 1 then
         0
