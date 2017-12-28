@@ -84,11 +84,35 @@ columnInternal fractions gutter elements =
     let
         columnsEqualLength =
             fractions
-                |> List.repeat (List.length elements // List.length fractions)
+                |> List.repeat (List.length elements)
                 |> List.concat
 
+        max =
+            List.length fractions
+
+        columns =
+            List.foldl helper ( elements, 1, 1, [] ) columnsEqualLength
+                |> (\( _, _, _, columns ) -> List.reverse columns)
+
+        helper fraction (( elements, x, y, selection ) as acc) =
+            case ( elements, x == max, rem y fraction == 0 ) of
+                ( head :: tail, True, True ) ->
+                    ( tail, 1, y + 1, Just head :: selection )
+
+                ( head :: tail, False, True ) ->
+                    ( tail, x + 1, y, Just head :: selection )
+
+                ( _, True, False ) ->
+                    ( elements, 1, y + 1, Nothing :: selection )
+
+                ( _, False, False ) ->
+                    ( elements, x + 1, y, Nothing :: selection )
+
+                _ ->
+                    acc
+
         columnsWithSize =
-            List.map2 (,) columnsEqualLength (toColumns fractions elements)
+            List.map2 (,) columnsEqualLength (toColumns fractions columns)
     in
     List.indexedMap (columnInternalList fractions gutter) columnsWithSize
 
@@ -165,7 +189,7 @@ rowInternalList fractions gutter elements =
                 , ( "padding", "0" )
                 , ( "width", "100%" )
                 , ( "clear", "both" )
-                , ( "display", "block" )
+                , ( "display", "inline-block" )
                 ]
     in
     ul [ columnStyle ] (List.indexedMap (rowInternalItem fractions gutter) elements)
@@ -205,7 +229,7 @@ rowInternalItem fractions (GutterInternal gutterRight gutterBottom) index ( elem
 {-| -}
 group : GutterRight -> GutterBottom -> List (Html msg) -> List (Html msg)
 group gutterRight gutterBottom layouts =
-    groupCustomInternal [ List.length layouts ] (GutterInternal gutterRight gutterBottom) layouts
+    groupCustomInternal (List.repeat (List.length layouts) 1) (GutterInternal gutterRight gutterBottom) layouts
 
 
 {-| -}
@@ -304,9 +328,11 @@ defaultBreakpoints =
 -- HELPERS
 
 
-toColumns : List Fraction -> List (Html msg) -> List (List (Html msg))
+toColumns : List Fraction -> List (Maybe (Html msg)) -> List (List (Html msg))
 toColumns fractions elements =
-    transpose (greedyGroupsOf (List.length fractions) elements)
+    greedyGroupsOf (List.length fractions) elements
+        |> transpose
+        |> List.map (List.filterMap identity)
 
 
 toRows : Int -> List a -> List (List a)

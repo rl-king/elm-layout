@@ -2,12 +2,13 @@ module Example exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (..)
 import Layout
 import Task
 import Window
 
 
-main : Program Never Int Msg
+main : Program Never Model Msg
 main =
     Html.program
         { init = init
@@ -17,38 +18,112 @@ main =
         }
 
 
-subscriptions : Int -> Sub Msg
+subscriptions : Model -> Sub Msg
 subscriptions _ =
     Window.resizes OnWindowSize
 
 
-init : ( Int, Cmd Msg )
+type alias Model =
+    { windowSize : Window.Size
+    , tab : Tab
+    }
+
+
+init : ( Model, Cmd Msg )
 init =
-    ( 0, Task.perform OnWindowSize Window.size )
+    ( { windowSize = Window.Size 0 0
+      , tab = Article (LayoutSettings 0 0 [ 1, 1 ])
+      }
+    , Task.perform OnWindowSize Window.size
+    )
+
+
+type Tab
+    = Article LayoutSettings
+
+
+type alias LayoutSettings =
+    { gutterRight : Float
+    , gutterBottom : Float
+    , fractions : List Int
+    }
+
+
+type LayoutField
+    = GutterRight String
+    | GutterBottom String
+    | Fractions String
 
 
 type Msg
     = OnWindowSize Window.Size
+    | UpdateArticle LayoutField
 
 
-update : Msg -> Int -> ( Int, Cmd Msg )
-update (OnWindowSize { width }) model =
-    ( width, Cmd.none )
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        OnWindowSize size ->
+            ( { model | windowSize = size }, Cmd.none )
+
+        UpdateArticle field ->
+            ( { model | tab = updateArticle field model.tab }, Cmd.none )
 
 
-view : Int -> Html Msg
-view windowWidth =
-    main_ [ style [ ( "margin", "0 auto" ), ( "max-width", "1280px" ), ( "padding", "24px" ) ] ]
-        [ div [] (Layout.columnVariable [ 2, 2 ] 12 htmlElements)
-        , viewRelated windowWidth
-        , div []
-            (Layout.groupVariable (Layout.golden 3)
-                12
-                0
-                [ viewArticle
-                , viewAside windowWidth
-                ]
-            )
+updateArticle : LayoutField -> Tab -> Tab
+updateArticle field (Article settings) =
+    let
+        toInt string =
+            String.toInt string |> Result.withDefault 1
+
+        toFloat_ string =
+            String.toFloat string |> Result.withDefault 1
+    in
+    case field of
+        GutterRight value ->
+            Article { settings | gutterRight = toFloat_ value }
+
+        GutterBottom value ->
+            Article { settings | gutterBottom = toFloat_ value }
+
+        Fractions value ->
+            Article { settings | fractions = List.map (toInt << String.trim) (String.split "," value) }
+
+
+view : Model -> Html Msg
+view model =
+    main_ [ style [ ( "margin", "0 auto" ), ( "padding", "24px" ) ] ]
+        [ nav [] []
+        , div [] (Layout.columnVariable [ 1, 2, 3, 4 ] 2 htmlElements)
+
+        -- , viewLayout model.tab
+        ]
+
+
+viewLayout : Tab -> Html Msg
+viewLayout ((Article { gutterRight, gutterBottom, fractions }) as tab) =
+    section []
+        [ viewLayoutHeader tab
+        , div [] (Layout.groupVariable fractions gutterRight gutterBottom [ viewArticle, viewArticle ])
+        , viewArticle
+        ]
+
+
+viewLayoutHeader : Tab -> Html Msg
+viewLayoutHeader (Article { gutterRight, gutterBottom, fractions }) =
+    header []
+        [ fieldset []
+            [ label [] [ text "Gutter right" ]
+            , input [ onInput (UpdateArticle << GutterRight) ] []
+            ]
+        , fieldset []
+            [ label [] [ text "Gutter bottom" ]
+            , input [ onInput (UpdateArticle << GutterBottom) ] []
+            ]
+        , fieldset []
+            [ label [] [ text "Fractions" ]
+            , input [ onInput (UpdateArticle << Fractions) ] []
+            ]
         ]
 
 
@@ -61,12 +136,12 @@ viewArticle =
 
 
 viewAside : Int -> Html Msg
-viewAside windowWidth =
-    aside [] (Layout.row 2 12 (List.take 4 htmlElements))
+viewAside windowSize =
+    aside [] [ text loremIpsum ]
 
 
 viewRelated : Int -> Html Msg
-viewRelated windowWidth =
+viewRelated windowSize =
     section [] (Layout.row 6 12 htmlElements)
 
 
@@ -84,18 +159,43 @@ element index ( color, height ) =
 data : List ( String, String )
 data =
     [ ( "SlateBlue", "100%" )
-    , ( "Tomato", "75%" )
+    , ( "Tomato", "100%" )
     , ( "Tomato", "100%" )
     , ( "MediumSeaGreen", "100%" )
-    , ( "Tomato", "75%" )
+    , ( "Tomato", "100%" )
     , ( "Violet", "100%" )
-    , ( "SlateBlue", "75%" )
+    , ( "SlateBlue", "100%" )
     , ( "Tomato", "100%" )
     , ( "MediumSeaGreen", "100%" )
-    , ( "SlateBlue", "75%" )
+    , ( "SlateBlue", "100%" )
     , ( "Tomato", "100%" )
     , ( "Violet", "100%" )
-    , ( "MediumSeaGreen", "75%" )
+    , ( "MediumSeaGreen", "100%" )
+    , ( "MediumSeaGreen", "100%" )
+    , ( "Tomato", "100%" )
+    , ( "Violet", "100%" )
+    , ( "SlateBlue", "100%" )
+    , ( "Tomato", "100%" )
+    , ( "MediumSeaGreen", "100%" )
+    , ( "SlateBlue", "100%" )
+    , ( "Tomato", "100%" )
+    , ( "Violet", "100%" )
+    , ( "MediumSeaGreen", "100%" )
+    , ( "MediumSeaGreen", "100%" )
+    , ( "SlateBlue", "100%" )
+    , ( "Tomato", "100%" )
+    , ( "Violet", "100%" )
+    , ( "MediumSeaGreen", "100%" )
+    , ( "MediumSeaGreen", "100%" )
+    , ( "Tomato", "100%" )
+    , ( "Violet", "100%" )
+    , ( "SlateBlue", "100%" )
+    , ( "Tomato", "100%" )
+    , ( "MediumSeaGreen", "100%" )
+    , ( "SlateBlue", "100%" )
+    , ( "Tomato", "100%" )
+    , ( "Violet", "100%" )
+    , ( "MediumSeaGreen", "100%" )
     ]
 
 
